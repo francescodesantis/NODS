@@ -7,12 +7,12 @@
     },
     "connections":{
         "LTP1":0.005,
-        "LTD1": -0.2,
+        "LTD1": -0.02,
         "Init_PCDCN":-1.0,
         "Init_MFDCN": 0.4
     },
     "protocol":{
-        "n_trial": 10,
+        "n_trial": 20,
         "trial_len": 580,
         "input_rate" : 40.0,
         "error_rate": 500.0,

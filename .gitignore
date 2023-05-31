@@ -124,5 +124,5 @@ dmypy.json
 .pyre/
 
 #results folder
-meta_l/
-standard/
+nods/visualizer.py
+results/

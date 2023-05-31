@@ -1,4 +1,5 @@
 #%%-------------------------------------------IMPORT-----------------------------
+'''Import'''
 import numpy as np
 import pandas as pd
 import math as m
@@ -37,6 +38,7 @@ with open(os.path.join(root_path,params_filename), "r") as read_file:
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import plotly.graph_objects as go
+import seaborn as sns
 with open('network_config.json', "r") as read_file:
     net_config = json.load(read_file)
 pc_color  = net_config['colors']['purkinje_cell'][0]
@@ -47,6 +49,7 @@ nos_color  = net_config['colors']['nNOS'][0]
 #%%**************NO DEPENDENCY**************
 NO_dependency = False
 #%%-------------------------------------------CREATE NETWORK---------------------
+'''Create network'''
 #**************DEFINE CELL POPULATIONS********************
 nest.CopyModel('iaf_cond_exp', 'granular_neuron')
 nest.CopyModel('iaf_cond_exp', 'purkinje_neuron')
@@ -174,13 +177,14 @@ for n in range(num_subpop):
 
 spikedetector_PC = nest.Create("spike_detector", params={"withgid": True,"withtime": True, "to_file": True, "label": "PC"})
 spikedetector_GR = nest.Create("spike_detector", params={"withgid": True,"withtime": True, "to_file": True, "label": "GR"})
-spikedetector_IO = nest.Create("spike_detector", params={"withgid": True,"withtime": True, "to_file": True, "label": "IO"})
-spikedetector_DCN = nest.Create("spike_detector", params={"withgid": True,"withtime": True, "to_file": True, "label": "DCN"})
+# spikedetector_IO = nest.Create("spike_detector", params={"withgid": True,"withtime": True, "to_file": True, "label": "IO"})
+# spikedetector_DCN = nest.Create("spike_detector", params={"withgid": True,"withtime": True, "to_file": True, "label": "DCN"})
 nest.Connect(PC, spikedetector_PC)
 nest.Connect(GR, spikedetector_GR)
-nest.Connect(IO, spikedetector_IO)
-nest.Connect(DCN, spikedetector_DCN)
+# nest.Connect(IO, spikedetector_IO)
+# nest.Connect(DCN, spikedetector_DCN)
 #%%-------------------------------------------DEFINE PROTOCOL--------------------
+'''Define protocol'''
 dt = float(1)
 n_trial = net_config['protocol']['n_trial']
 trial_len = net_config['protocol']['trial_len']
@@ -194,6 +198,7 @@ start_US = net_config['protocol']['start_US']
 stop_US = net_config['protocol']['stop_US']
 sim_time_steps = np.arange(0,total_sim_len,dt) #[ms] 
 #%%-------------------------------------------DEFINE GEOMETRY--------------------
+'''Define geometry'''
 source_ids = [pfs[i][0] for i in range(len(pfs))]
 PC_ids = [pfs[i][1] for i in range(len(pfs))]
 nos_ids = [pfs[i][4] for i in range(len(pfs))]
@@ -233,7 +238,8 @@ for i in range(len(pfs)):
     nNOS_coordinates[i,1] = random.uniform(PC_y + pc_soma + proportion - y_nos_variation, PC_y + pc_soma + proportion + y_nos_variation)
     nNOS_coordinates[i,2] = random.uniform(PC_z - z_nos_variation/2, PC_z + z_nos_variation/2)
 ev_point_coordinates = nNOS_coordinates
-#%%-------------------------------------------DEFINE SUBPOPULATION---------------TODO define cluster to be stimulated from mf
+#%%-------------------------------------------DEFINE SUBPOPULATION---------------
+'''Define subpopulation'''
 fig = go.Figure()
 color = ['red', 'blue', 'green', 'yellow']
 GR_subpop = [[] for i in range(num_subpop)]
@@ -259,6 +265,7 @@ for n in range(num_subpop):
                                         'indegree': 4,
                                         "multapses": False}, MFGR_conn_param)
 #%%-------------------------------------------DEFINE STIMULI---------------------
+'''Define stimuli'''
 conn_param = {"model":  "static_synapse",
                     "weight": 1.,
                     "delay":  1.}
@@ -266,7 +273,7 @@ PG_input = nest.Create("spike_generator", MF_num)
 nest.Connect(PG_input, MF, 'one_to_one',conn_param)
 if num_subpop !=1:
     PG_active = []
-    for i in [2,3]: 
+    for i in [0]: 
         for mf_id in MF_subpop[i]: 
             A = nest.GetConnections(PG_input,[mf_id])
             PG_active.append(A[0][0])
@@ -303,7 +310,7 @@ US_stimulus = np.zeros((len(US_pattern),2))
 US_stimulus[:,0] = US_id
 US_stimulus[:,1] = US_pattern
 #%%-------------------------------------------INITIALIZE NODS--------------------
-
+'''Initialize NODS'''
 if NO_dependency: 
     init_new_sim = True 
     simulation_file = 'p'
@@ -315,12 +322,13 @@ if NO_dependency:
     sim.time = sim_time_steps  
     sim.init_simulation(simulation_file,store_sim=True)
 #%%-------------------------------------------SIMULATE NETWORK-------------------
+'''Simulate network'''
 NO_threshold = 130
-t0 = time.time()
 processed = 0
 trial_CS_stimulus = np.copy(CS_stimulus)
 trial_US_stimulus = np.copy(US_stimulus)
-for trial in range(n_trial):    
+t0 = time.time()
+for trial in range(n_trial): 
     print("Simulating trial: " + str(trial) )
     trial_CS_stimulus[:,1] = CS_stimulus[:,1]+(trial*trial_len)   
     trial_US_stimulus[:,1] = US_stimulus[:,1]+(trial*trial_len)
@@ -336,22 +344,75 @@ for trial in range(n_trial):
             active_sources = ID_cell[processed:]
             processed += len(active_sources)
             sim.evaluate_diffusion(active_sources,t)  
+            list_dict = []
             for i in range(len(pfs)):
-                nest.SetStatus([pfs[i]], {'meta_l' : float(sig(x=sim.NO_in_ev_points[t,i],A=1,B=NO_threshold))})
-
+                list_dict.append({'meta_l' : float(sig(x=sim.NO_in_ev_points[t,i],A=1,B=NO_threshold))})
+            nest.SetStatus(pfs, list_dict)
 t = time.time() - t0
-
 print("time {}".format(t))
 
-#%%-------------------------------------------PLOT NETWORK ACTIVITY--------------TODO improve plots
+#%%-------------------------------------------PLOT PC SDF MEAN OVER TRIALS-------
+'''Plot PC sdf mean'''
+palette = list(reversed(sns.color_palette("viridis", n_trial).as_hex()))
+sm = plt.cm.ScalarMappable(cmap="viridis_r", norm=plt.Normalize(vmin=0, vmax=n_trial))
+cell = 'PC'
+step = 50
+sdf_mean_cell = []
+sdf_maf_cell = []
+for trial in range(n_trial):
+    start = trial*trial_len
+    stop = stop_CS+trial*trial_len
+    spk = get_spike_activity(cell)
+    sdf_cell = sdf(start=start, stop=stop, spk=spk, step=step)
+    sdf_mean_cell.append(sdf_mean(sdf_cell))
+    sdf_maf_cell.append(sdf_maf(sdf_cell))
+
+fig = plt.figure()
+for trial in range(n_trial):
+    plt.plot(sdf_mean_cell[trial], palette[trial])
+plt.title(cell)
+plt.xlabel("Time [ms]")
+plt.ylabel("SDF [Hz]")
+plt.axvline(start_CS, label = "CS start", c = "grey")
+plt.axvline(start_US, label = "US start", c = "black")
+plt.axvline(stop_CS, label = "CS & US end ", c = "red")
+
+#plt.xticks(np.arange(0,351,50), np.arange(50,401,50))
+plt.legend()
+plt.colorbar(sm, label="Trial")
+plt.show()
+#%%-------------------------------------------PLOT INTERCELLS VARIABILITY--------
+'''Plot PC sdf'''
+fig,axes = plt.subplots(n_trial,1, figsize=(6,20), constrained_layout =True, sharex=True)#, sharey=True)
+for trial in range(n_trial):
+    start = trial*trial_len
+    stop = stop_CS+trial*trial_len
+    spk = get_spike_activity(cell)
+    sdf_cell = sdf(start=start, stop=stop, spk=spk, step=step)
+    axes[trial].plot(sdf_cell[0], palette[trial])
+    axes[trial].plot(sdf_cell[1], palette[trial])
+    axes[trial].axvline(start_CS, label = "CS start", c = "grey")
+    axes[trial].axvline(start_US, label = "US start", c = "black")
+    axes[trial].axvline(stop_CS, label = "CS & US end ", c = "red")
+    axes[trial].set_xlabel('Time [ms]')
+    axes[trial].set_ylabel('SDF [Hz]')
+    axes[trial].set_title('Trial '+str(trial))
+
+
+#%%-------------------------------------------PLOT NETWORK ACTIVITY--------------TODO improve plots 
+'''
 plot_cell_activity(trial_len=trial_len, n_trial=n_trial, delta_t=5,cell_number=GR_num, cell_name='GR', freq_plot = True, png = False, scatter = True, png_scatter = False, dir='')
 plt.show()
+#'''
 plot_cell_activity(trial_len=trial_len, n_trial=n_trial, delta_t=trial_len,cell_number=PC_num, cell_name='PC', freq_plot = True, png = False, scatter = True, png_scatter = False, dir = '')
 plt.show()
+'''
 plot_cell_activity(trial_len=trial_len, n_trial=n_trial, delta_t=5,cell_number=IO_num, cell_name='IO', freq_plot = True, png = False, scatter = True, png_scatter = False, dir = '')
 plt.show()
+#'''
 #%%-------------------------------------------PLOT [NO]--------------------------TODO plot NO diffusion on the dendritic tree (geometrical representation)
-"""fig2,axes2 = plt.subplots(1,1, figsize=(15,5), constrained_layout =True, sharey=True)
+'''
+fig2,axes2 = plt.subplots(1,1, figsize=(15,5), constrained_layout =True, sharey=True)
 probe_id = 246
 probe = sim.NO_in_ev_points[:,probe_id]
 axes2.plot(sim_time_steps, probe, linewidth=3, label="probe #{}".format(probe_id))
@@ -359,8 +420,10 @@ axes2.grid()
 axes2.set_xlabel('time [ms]')
 axes2.set_ylabel('concentration [pM]')
 axes2.legend()
-fig2.show()"""
-#%%-------------------------------------------PLOT WEIGHT CHANGE AND [NO]--------
+fig2.show()
+#'''
+#%%-------------------------------------------PLOT WEIGHT CHANGE AND [NO]-------- TODO da sistemare
+#'''
 import seaborn as sns
 csv_name = 'PFPC'
 print('Reading:', csv_name)
@@ -434,3 +497,4 @@ for PC_id,data_pfpc in connection_dict.items():
     fig3.show()
 
 #fig4,axes4 = plt.subplots(num_subpop,2,figsize=(15,5), constrained_layout =True, sharey=True)
+#'''
