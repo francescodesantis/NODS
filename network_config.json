@@ -1,0 +1,52 @@
+{   "cell_num":{
+        "MF_num": 100,
+        "GR_num": 2000,
+        "PC_num": 2,
+        "IO_num": 2,
+        "DCN_num": 1
+    },
+    "connections":{
+        "LTP1":0.005,
+        "LTD1": -0.2,
+        "Init_PCDCN":-1.0,
+        "Init_MFDCN": 0.4
+    },
+    "protocol":{
+        "n_trial": 10,
+        "trial_len": 580,
+        "input_rate" : 40.0,
+        "error_rate": 500.0,
+        "noise_rate": 4.0,
+        "start_CS": 200.0,
+        "stop_CS": 380.0,
+        "start_US": 350.0,
+        "stop_US": 380.0
+    },
+    "colors" : {
+        "purkinje_cell": ["#9673A6","E1D5E7"],
+        "nNOS": ["#82B366","#D5E8D4"],
+        "granule_cell": ["#D6B656","#FFF2CC"],
+        "parallel_fiber": "#D6B656",
+        "glomerulus": ["#6C8EBF","#DAE8FC"],
+        "mossy_fiber" : "#6C8EBF",
+        "inferior_olive": ["#B85450","#DAE8FC"],
+        "climbing_fiber": "#B85450",
+        "deep_cerebellar_nuclei": ["#000000","#CCCCCC"],
+        "golgi_cell": ["#975199","E6D0DE"],
+        "molecular_interneuron": ["#D79B00","FFE6CC"],
+        "CS": "#DAE8FC",
+        "US": "#F8CECC",
+        "CR": "#000000",
+        "calcium": "#D80073",
+        "spikes": "#FFFF88",
+        "probes": "#6A00FF"
+    },
+    "geometry":{
+        "y_ml":150,
+        "y_gl":130,
+        "granule_density":3.9e-3,
+        "nos_density": 0.05,
+        "PC_dist": 15,        
+        "num_subpop": 4
+    }
+}

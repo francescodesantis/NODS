@@ -1,0 +1,27 @@
+{
+    "production" : {
+        "dt" : 1,
+        "tauCa": -150,
+        "tauNOS1": 200,
+        "tauNOS2": 25, 
+        "A" : 1.35e-9
+    },
+  
+    "diffusion" : {
+        "dt" : 1,
+        "ds" : 0.1, 
+        "r_max" : 15,
+        "D" : 0.848,
+        "I" : 0.15,
+        "B" : 1e12
+    },
+
+    "simulation" : {
+        "dt" : 1,
+        "t_start": 0,
+        "t_end": 1000,
+        "Calm2C_0" : 0,
+        "nNOS_0" : 0,
+        "NO_p_0": 0
+    }
+}
