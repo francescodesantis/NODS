@@ -47,7 +47,7 @@ nos_color  = net_config['colors']['nNOS'][0]
 
 
 #%%**************NO DEPENDENCY**************
-NO_dependency = False
+NO_dependency = True
 #%%-------------------------------------------CREATE NETWORK---------------------
 '''Create network'''
 #**************DEFINE CELL POPULATIONS********************
@@ -383,7 +383,7 @@ plt.colorbar(sm, label="Trial")
 plt.show()
 #%%-------------------------------------------PLOT INTERCELLS VARIABILITY--------
 '''Plot PC sdf'''
-fig,axes = plt.subplots(n_trial,1, figsize=(6,20), constrained_layout =True, sharex=True)#, sharey=True)
+fig,axes = plt.subplots(n_trial,1, figsize=(6,20), constrained_layout =True, sharex=True, sharey=True)
 for trial in range(n_trial):
     start = trial*trial_len
     stop = stop_CS+trial*trial_len
@@ -411,9 +411,9 @@ plot_cell_activity(trial_len=trial_len, n_trial=n_trial, delta_t=5,cell_number=I
 plt.show()
 #'''
 #%%-------------------------------------------PLOT [NO]--------------------------TODO plot NO diffusion on the dendritic tree (geometrical representation)
-'''
+# '''
 fig2,axes2 = plt.subplots(1,1, figsize=(15,5), constrained_layout =True, sharey=True)
-probe_id = 246
+probe_id = 240
 probe = sim.NO_in_ev_points[:,probe_id]
 axes2.plot(sim_time_steps, probe, linewidth=3, label="probe #{}".format(probe_id))
 axes2.grid()

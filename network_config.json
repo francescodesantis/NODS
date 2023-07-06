@@ -5,6 +5,7 @@
         "IO_num": 2,
         "DCN_num": 1
     },
+    
     "connections":{
         "LTP1":0.005,
         "LTD1": -0.02,
