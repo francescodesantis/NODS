@@ -28,28 +28,40 @@ class NODS:
         self.nNOS_0     = model_parameters['simulation']['nNOS_0']
         self.NO_p_0     = model_parameters['simulation']['NO_p_0']
 
-    def init_geometry(self, nNOS_coordinates, ev_point_coordinates, source_ids, nos_ids = None, ev_point_ids = None, file_ev_points = None, file_nNOS = None):
+    def init_geometry(self, nNOS_coordinates, ev_point_coordinates, source_ids, nos_ids = None, cluster_nos_ids=None, ev_point_ids = None, cluster_ev_point_ids=None, file_ev_points = None, file_nNOS = None):
 
         if not file_ev_points:
             if not ev_point_ids:
                 ev_point_ids = np.arange(len(ev_point_coordinates))
+            if not cluster_ev_point_ids:
+                self.cluster_ev_point_ids = -1*np.ones((len(ev_point_coordinates)))
+            else:
+                self.cluster_ev_point_ids = cluster_ev_point_ids
+
             self.ev_points = {}    
             for index,ev_point_id in enumerate(ev_point_ids):
                 self.ev_points[ev_point_id] = dict(x =  ev_point_coordinates[index,0],
                                                    y =  ev_point_coordinates[index,1],
-                                                   z =  ev_point_coordinates[index,2])
+                                                   z =  ev_point_coordinates[index,2],
+                                                   cluster = self.cluster_ev_point_ids[index])
             #self.ev_points.sort_values(by='evpoint_id')
         #TODO else: load da file
+
         if not file_nNOS:
             if not nos_ids:
                 nos_ids = np.arange(len(nNOS_coordinates))
+            if not cluster_nos_ids:
+                self.cluster_nos_ids = -1*np.ones((len(nNOS_coordinates)))
+            else:
+                self.cluster_nos_ids = cluster_nos_ids
+
             self.all_nNOS = {}
             for index,nos_id in enumerate(nos_ids):
                 self.all_nNOS[nos_id] = dict(source_id = source_ids[index],
                                             x =  nNOS_coordinates[index,0],
                                             y =  nNOS_coordinates[index,1],
-                                            z =  nNOS_coordinates[index,2])    
-                
+                                            z =  nNOS_coordinates[index,2],
+                                            cluster = self.cluster_nos_ids[index])                    
             #self.all_nNOS = pd.DataFrame({'source_id':source_ids, 'nos_id':nos_ids, 'x': nNOS_coordinates[:,0], 'y': nNOS_coordinates[:,1], 'z': nNOS_coordinates[:,2]})
         #TODO else: load da file
         self.sort_sources()
@@ -59,20 +71,25 @@ class NODS:
         """function to filter the sources of nNOS activation to be avaluated"""
         self.relative_dist = []
         self.source_to_eval = []
-        # loop on the receiver
-        for evpoint_id in self.ev_points:
-            # loop on the sources
-            ev_point_coordinates = np.array([self.ev_points[evpoint_id]['x'],self.ev_points[evpoint_id]['y'],self.ev_points[evpoint_id]['z']])
-            for nos_id in self.all_nNOS:                    
-                nNOS_coordinates = np.array([self.all_nNOS[nos_id]['x'],self.all_nNOS[nos_id]['y'],self.all_nNOS[nos_id]['z']])                    
-                # distance evaluation
-                d = spatial.distance.euclidean(nNOS_coordinates, ev_point_coordinates)
-                # check on relevant distance value
-                if d < self.r_max:
-                    # lists update
-                    source_id = self.all_nNOS[nos_id]['source_id']
-                    self.source_to_eval.append(source_id)
-                    self.relative_dist.append([np.int(source_id), np.int(nos_id), np.int(evpoint_id), d]) # 0: id_source, 1: id_nos, 2:id_evpoint, 3: relative_distance
+        cluster_ids = np.unique(self.cluster_nos_ids)
+        # loop on cluster DA PARALLELIZZARE
+        for cluster in cluster_ids:
+            # loop on the receiver
+            for evpoint_id in self.ev_points:
+                # loop on the sources
+                if self.ev_points[evpoint_id]['cluster']==cluster:
+                    ev_point_coordinates = np.array([self.ev_points[evpoint_id]['x'],self.ev_points[evpoint_id]['y'],self.ev_points[evpoint_id]['z']])
+                    for nos_id in self.all_nNOS: 
+                        if self.all_nNOS[nos_id]['cluster']==cluster:
+                            nNOS_coordinates = np.array([self.all_nNOS[nos_id]['x'],self.all_nNOS[nos_id]['y'],self.all_nNOS[nos_id]['z']])                    
+                            # distance evaluation
+                            d = spatial.distance.euclidean(nNOS_coordinates, ev_point_coordinates)
+                            # check on relevant distance value
+                            if d < self.r_max:
+                                # lists update
+                                source_id = self.all_nNOS[nos_id]['source_id']
+                                self.source_to_eval.append(source_id)
+                                self.relative_dist.append([np.int(source_id), np.int(nos_id), np.int(evpoint_id), d, np.int(cluster)]) # 0: id_source, 1: id_nos, 2:id_evpoint, 3: relative_distance
         # elimination repetition of same source
         self.source_to_eval = np.unique(self.source_to_eval)
 

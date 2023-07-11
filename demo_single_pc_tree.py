@@ -203,6 +203,9 @@ source_ids = [pfs[i][0] for i in range(len(pfs))]
 PC_ids = [pfs[i][1] for i in range(len(pfs))]
 nos_ids = [pfs[i][4] for i in range(len(pfs))]
 ev_point_ids = [pfs[i][4] for i in range(len(pfs))]
+cluster_ev_point_ids = [pfs[i][1] for i in range(len(pfs))]
+cluster_nos_ids = [pfs[i][1] for i in range(len(pfs))]
+
 # def geometry constants
 y_ml = net_config['geometry']['y_ml'] # height of molecular layer
 y_gl = net_config['geometry']['y_gl'] # height of granular layer
@@ -312,15 +315,18 @@ US_stimulus[:,1] = US_pattern
 #%%-------------------------------------------INITIALIZE NODS--------------------
 '''Initialize NODS'''
 if NO_dependency: 
+    t0 = time.time()
     init_new_sim = True 
     simulation_file = 'p'
     sim = NODS(params)
     if init_new_sim:
-        sim.init_geometry(nNOS_coordinates=nNOS_coordinates, ev_point_coordinates=ev_point_coordinates, source_ids=source_ids, ev_point_ids=ev_point_ids, nos_ids=nos_ids)
+        sim.init_geometry(nNOS_coordinates=nNOS_coordinates, ev_point_coordinates=ev_point_coordinates, source_ids=source_ids, ev_point_ids=ev_point_ids, nos_ids=nos_ids, cluster_ev_point_ids=cluster_ev_point_ids, cluster_nos_ids=cluster_nos_ids)
     else:
         sim = sim.load_simulation(simulation_file=simulation_file)  
     sim.time = sim_time_steps  
     sim.init_simulation(simulation_file,store_sim=True)
+    t = time.time() - t0
+    print("time {}".format(t))
 #%%-------------------------------------------SIMULATE NETWORK-------------------
 '''Simulate network'''
 NO_threshold = 130
