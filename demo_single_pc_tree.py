@@ -324,7 +324,7 @@ if NO_dependency:
     else:
         sim = sim.load_simulation(simulation_file=simulation_file)  
     sim.time = sim_time_steps  
-    sim.init_simulation(simulation_file,store_sim=True)
+    sim.init_simulation(simulation_file,store_sim=False) # If you want to save sim inizialization change store_sim=True
     t = time.time() - t0
     print("time {}".format(t))
 #%%-------------------------------------------SIMULATE NETWORK-------------------

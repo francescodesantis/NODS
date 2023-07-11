@@ -6,7 +6,7 @@ from bsb.plotting import plot_morphology
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-network = from_storage("MouseCerebellum.hdf5")
+network = from_storage("cerebellum_NODS.hdf5")
 
 # for ps in network.get_placement_sets():
 #     print("numb of ", ps.tag, ": ", len(ps))
