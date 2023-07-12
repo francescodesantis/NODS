@@ -39,7 +39,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import plotly.graph_objects as go
 import seaborn as sns
-with open('network_config.json', "r") as read_file:
+with open('demo_single_pc_tree.json', "r") as read_file:
     net_config = json.load(read_file)
 pc_color  = net_config['colors']['purkinje_cell'][0]
 grc_color  = net_config['colors']['granule_cell'][0]

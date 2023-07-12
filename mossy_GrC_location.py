@@ -28,7 +28,7 @@ data_spot_glom = data_glom[np.in1d(data_mf[:, 0], spot_mf)]
 spot_glom = data_spot_glom[:,0]'''
 
 # spot glomeruli
-pos_glom =network.get_placement_set("glomerulus").load_positions()
+pos_glom = network.get_placement_set("glomerulus").load_positions()
 spot_glom=[]
 pos_spot_glom =[]
 for n, position in enumerate(pos_glom):
@@ -52,6 +52,7 @@ print("selected_pc: ", selected_pc)
 cs= network.get_connectivity_set('parallel_fiber_to_purkinje').load_connections().as_globals()
 data=cs.all()
 data_pre = data[0]
+print("num of nnos",len(data_pre))
 data_post = data[1]
 
 #Filter data by selected pc cell
