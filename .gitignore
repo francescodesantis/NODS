@@ -127,4 +127,5 @@ dmypy.json
 nods/visualizer.py
 results/
 cerebellum_NODS.hdf5
+cerebellum_NODS_smaller.hdf5
 p.p

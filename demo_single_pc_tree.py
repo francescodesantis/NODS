@@ -15,6 +15,9 @@ import multiprocessing
 import nest
 nest.Install("cerebmodule")
 RESOLUTION = 1.
+CORES=24
+VIRTUAL_CORES = 24
+nest.ResetKernel()
 nest.SetKernelStatus({"overwrite_files": True,"resolution": RESOLUTION})
 random.seed()
 seed_g = random.randint(10, 10000)
@@ -47,7 +50,7 @@ nos_color  = net_config['colors']['nNOS'][0]
 
 
 #%%**************NO DEPENDENCY**************
-NO_dependency = True
+NO_dependency = False
 #%%-------------------------------------------CREATE NETWORK---------------------
 '''Create network'''
 #**************DEFINE CELL POPULATIONS********************
