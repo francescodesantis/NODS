@@ -450,23 +450,21 @@
             "parameters": {
                 "rate": 4.0,
                 "start": 0.0,
-                "stop": 50500.0
+                "stop": 101000.0
             }
         },
         "CS": {
             "device": "spike_generator",
             "io": "input",
-            "targetting": "mf_cylinder",
-            "cell_types": [
-                "mossy_fibers"
-            ],
             "radius": 20,
+            "x":75,
+            "z":100,
             "parameters": {
                 "purpose": "CS",
                 "start_first": 100,
                 "burst_dur": 280,
                 "rate": 40,
-                "between_start": 500,
+                "between_start": 1000,
                 "n_trials": 101
             },
             "connection": {
@@ -485,7 +483,7 @@
                 "start_first": 850,
                 "burst_dur": 30,
                 "rate": 500,
-                "between_start": 500,
+                "between_start": 1000,
                 "n_trials": 100
             },
             "connection": {
