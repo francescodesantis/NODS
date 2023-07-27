@@ -1,6 +1,4 @@
 #%%-------------------------------------------IMPORT-----------------------------
-'''Import'''
-'''Import'''
 import numpy as np
 import pandas as pd
 import math as m
@@ -11,32 +9,29 @@ import random
 import dill
 import time
 
-with open('demo_cerebellum.json', "r") as json_file:
+with open('./demo_cerebellum.json', "r") as json_file:
     net_config = json.load(json_file)
-
+folder = "./demo_cerebellum_data/"
 hdf5_file = "cerebellum_NODS_smaller"
-network_geom_file = 'geom_'+hdf5_file
-network_connectivity_file = 'conn_'+hdf5_file
+network_geom_file = folder+'geom_'+hdf5_file
+network_connectivity_file = folder+'conn_'+hdf5_file
 neuronal_populations = dill.load(open(network_geom_file, "rb"))
 connectivity = dill.load(open(network_connectivity_file, "rb"))
 
-
 #**************NEST********************
 import nest
+
+
 nest.Install("cerebmodule")
 RESOLUTION = 1.
 CORES=24
 VIRTUAL_CORES = 24
 nest.ResetKernel()
-
-nest.SetKernelStatus({"overwrite_files": True,"total_num_virtual_procs":CORES,"resolution": RESOLUTION})
-nest.ResetKernel()
-
+nest.SetKernelStatus({"overwrite_files": True,"resolution": RESOLUTION})
 nest.set_verbosity("M_ERROR")  # reduce plotted info
 #%%**************NO DEPENDENCY**************
 NO_dependency = False
 #%%-------------------------------------------CREATE NETWORK---------------------
-# definire modelli dei neuroni
 cell_types = list(net_config['cell_types'].keys())
 for cell_name in cell_types:
     if cell_name == 'glomerulus':
@@ -50,34 +45,34 @@ for cell_name in cell_types:
         dVinit = [{"Vinit": np.random.uniform(net_config['cell_types'][cell_name]['parameters']['Vinit'] - 10, net_config['cell_types'][cell_name]['parameters']['Vinit'] + 10)} for _ in range(net_config['cell_types'][cell_name]['numerosity'])]
         nest.SetStatus(neuronal_populations[cell_name]['cell_ids'], dVinit)
         print(cell_name, neuronal_populations[cell_name]['cell_ids'][0])
-
-
 #%%-------------------------------------------CONNECT NETWORK---------------------
-# connettere ciclando su connessioni fatte da BSB
-# ciclo su connection matrix da BSB, id di BSB sono inidici che posso usare nella lista di indici nest quindi connetto pop_post[index_BSB_pre] con pop_pre[index_BSB_post]
 connection_models = list(net_config['connection_models'].keys())
 for conn_model in connection_models:
     pre = net_config['connection_models'][conn_model]['pre']
     post = net_config['connection_models'][conn_model]['post']
-
+    print("Connecting ",pre," to ",post, "(",conn_model,")")
     if conn_model == 'parallel_fiber_to_purkinje':     
-        print("connecting granule_cell to purkinje_cell (parallel_fiber_to_purkinje)")
-        '''
-        
+        #'''
         data_pre=connectivity[conn_model]['id_pre']
         data_post=connectivity[conn_model]['id_post']
+
+        t0 = time.time()
         num_syn=len(data_pre)
         vt = nest.Create("volume_transmitter_alberto", int(num_syn))
         for n, vti in enumerate(vt):
             nest.SetStatus([vti], {"vt_num": n})
-        # recdict2 = {"to_memory": False,
-        #     "to_file":    True,
-        #     "label":     "pf-PC_",
-        #     "senders":    neuronal_populations['granule_cell']['cell_ids'],
-        #     "targets":    neuronal_populations['purkinje_cell']['cell_ids']}
-        # WeightPFPC = nest.Create('weight_recorder', params=recdict2)
+        t = time.time() - t0
+        print('volume transmitter created in: ', t, ' sec')
+        '''
+        recdict2 = {"to_memory": False,
+                    "to_file":    True,
+                    "label":     "pf-PC_",
+                    "senders":    neuronal_populations['granule_cell']['cell_ids'],
+                    "targets":    neuronal_populations['purkinje_cell']['cell_ids']}
+        WeightPFPC = nest.Create('weight_recorder', params=recdict2)
+        # '''
 
-         
+        print('Set connectivity parameters')
         nest.SetDefaults(net_config['connection_models'][conn_model]['synapse_model'],
                         {"A_minus": net_config['connection_models'][conn_model]['parameters']['A_minus'],
                         "A_plus":   net_config['connection_models'][conn_model]['parameters']['A_plus'],
@@ -86,40 +81,45 @@ for conn_model in connection_models:
                         "vt":       vt[0]#,
                         # "weight_recorder": WeightPFPC[0]
                         })
-           
         syn_param = {"model":  net_config['connection_models'][conn_model]['synapse_model'],
                     "weight": net_config['connection_models'][conn_model]['weight'],
                     "delay":  net_config['connection_models'][conn_model]['delay'],
                     "receptor_type": net_config['cell_types']['purkinje_cell']['receptors']['granule_cell']
-                    }
-                    
+                    }                    
         nest.Connect(data_pre+neuronal_populations['granule_cell']['cell_ids'][0], data_post+neuronal_populations['purkinje_cell']['cell_ids'][0], {"rule": "one_to_one"}, syn_param)       
-        pfs = nest.GetConnections(neuronal_populations['granule_cell']['cell_ids'], neuronal_populations['purkinje_cell']['cell_ids'])
         
+        print('Get pf-PC synapses')
+        t0 = time.time()
+        pfs = nest.GetConnections(neuronal_populations['granule_cell']['cell_ids'], neuronal_populations['purkinje_cell']['cell_ids'])
+        t = (time.time() - t0)/60
+        print('connection matrix extracted in: ', t, ' min')
+        PC_vt_dict = {}
+        for PCi in neuronal_populations['purkinje_cell']['cell_ids']:
+            PC_vt_dict[PCi] = []
+            
+        t0 = time.time()
         vt_num=0
         for n in range(len(pfs)):
             nest.SetStatus([pfs[n]], {'vt_num': float(vt_num)})
-            if not NO_dependency:
-                nest.SetStatus([pfs[n]], {'meta_l': float(1.)}) 
-            vt_num +=1
+            vt_tmp = PC_vt_dict[pfs[n][1]]
+            PC_vt_dict[pfs[n][1]] = np.append(vt_tmp,vt_num)
+            vt_num += 1
+            vt_num = int(vt_num)
+        print('volume transmitter initialized in: ', t, ' min')
 
-        PC_vt_dict = {}
-        for i, PCi in enumerate(neuronal_populations['purkinje_cell']['cell_ids']):
-            pfs_PCi = nest.GetConnections(neuronal_populations['granule_cell']['cell_ids'], [PCi])
-            PC_vt_dict[PCi]=np.array(nest.GetStatus(pfs_PCi, {'vt_num'}),dtype=int).T[0]
-
-        print("connecting io_cell to purkinje_cell (io_to_purkinje)")
-
+        print("Connecting io_cell to purkinje_cell (io_to_purkinje)")
+        t0 = time.time()
         cf_PC = nest.GetConnections(neuronal_populations['io_cell']['cell_ids'], neuronal_populations['purkinje_cell']['cell_ids'])
         for i,syn in enumerate(cf_PC):
             vt_tmp = [ vt[n] for n in PC_vt_dict[cf_PC[i][1]]]
             nest.Connect([cf_PC[i][0]], vt_tmp, {'rule':'all_to_all'},
                                     {"model": "static_synapse",
                                     "weight": 1.0, "delay": 1.0})
+        t = time.time() - t0
+        print('done in: ', t, ' sec')
         #'''
-            
+    
     else:
-        print("connecting ",pre," to ",post, "(",conn_model,")")
         if post == 'glomerulus':
             syn_param = {"model": "static_synapse", 
                      "weight": net_config['connection_models'][conn_model]['weight'], 
@@ -130,24 +130,22 @@ for conn_model in connection_models:
                      "delay": net_config['connection_models'][conn_model]['delay'], 
                      "receptor_type": net_config['cell_types'][post]['receptors'][pre]}        
             
-        if pre == 'io_cell':
-            nest.Connect(neuronal_populations[pre]['cell_ids'], neuronal_populations[post]['cell_ids'], {"rule": "all_to_all"}, syn_param)
+        if pre == 'io_cell': #guardare rule 'fixed_indegree' 1 va bene anche per bc e sc
+            nest.Connect(neuronal_populations[pre]['cell_ids'], neuronal_populations[post]['cell_ids'], {'rule': 'fixed_indegree', 'indegree': 1}, syn_param)
         else:
             data_pre=connectivity[conn_model]['id_pre']
             data_post=connectivity[conn_model]['id_post']
             nest.Connect(data_pre+neuronal_populations[pre]['cell_ids'][0], data_post+neuronal_populations[post]['cell_ids'][0], {"rule": "one_to_one"}, syn_param)
-#%%--------
-# init_weight = [[] for i in range(len(neuronal_populations['purkinje_cell']['cell_ids']))]
-# for i,PC_id in enumerate(neuronal_populations['purkinje_cell']['cell_ids']):
-#     for j in range(len(pfs)):
-#         if (pfs[j][1]==PC_id):
-#             init_weight[i].append(nest.GetStatus([pfs[j]], {'weight'})[0][0])
-# init_weight = np.array(init_weight)
-
-
-# anche quando connetto PC, lo faccio per singola syn e assegno già coordinata nNOS e ev_point
+'''
+init_weight = [[] for i in range(len(neuronal_populations['purkinje_cell']['cell_ids']))]
+for i,PC_id in enumerate(neuronal_populations['purkinje_cell']['cell_ids']):
+    for j in range(len(pfs)):
+        if (pfs[j][1]==PC_id):
+            init_weight[i].append(nest.GetStatus([pfs[j]], {'weight'})[0][0])
+init_weight = np.array(init_weight)
+#'''
 #%%-------------------------------------------STIMULUS GEOMETRY---------------------
-# geometria stimolo
+# Stimulus geometry
 print('stimulus geometry')
 import plotly.graph_objects as go
 fig = go.Figure()
@@ -162,7 +160,7 @@ in_range_mask = (np.sum((ps[:, [0, 2]] - origin) ** 2, axis=1) < radius ** 2)
 index = np.array(neuronal_populations['glomerulus']['cell_ids'])
 id_map_glom = list(index[in_range_mask])
 
-
+''' Plot stimulus geometry
 xpos = ps[:,0]
 ypos = ps[:,2]
 zpos = ps[:,1]
@@ -193,7 +191,7 @@ for i in id_map_grc:
 #fig.add_trace(go.Scatter3d(x=xpos, y=ypos, z=zpos, mode='markers', marker=dict(size=2,color='red',opacity=0.01)))
 fig.add_trace(go.Scatter3d(x=xpos_stim, y=ypos_stim, z=zpos_stim, mode='markers', marker=dict(size=2,color='red')))
 fig.show()
-'''
+
 ps = neuronal_populations['purkinje_cell']['cell_pos']
 xpos = ps[:,0]
 ypos = ps[:,2]
@@ -258,9 +256,13 @@ for device_name in devices:
         spikedetectors[cell_name] = nest.Create(net_config['devices'][device_name]['device'], params=net_config['devices'][device_name]['parameters'])
         nest.Connect(neuronal_populations[cell_name]['cell_ids'],spikedetectors[cell_name])
 
-#%%-------------------------------------------SIMULATE NETWORK-------------------
-print('simulate')
+#%%-------------------------------------------INITIALIZE NODS---------------------
 
+#%%-------------------------------------------SIMULATE NETWORK---------------------
+#Simulate Network
+print('simulate')
+#nest.SetKernelStatus({"overwrite_files": True,"resolution": RESOLUTION,'grng_seed': 101,'rng_seeds': [100 + k for k in range(2,CORES+2)],'local_num_threads': CORES, 'total_num_virtual_procs': CORES})
+print('Single trial length: ',between_start)
 for trial in range(n_trials+1):
     t0 = time.time()
     print('Trial ', trial+1, 'over ', n_trials)
