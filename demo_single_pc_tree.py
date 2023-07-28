@@ -50,7 +50,7 @@ nos_color  = net_config['colors']['nNOS'][0]
 
 
 #%%**************NO DEPENDENCY**************
-NO_dependency = False
+NO_dependency = True
 #%%-------------------------------------------CREATE NETWORK---------------------
 '''Create network'''
 #**************DEFINE CELL POPULATIONS********************
@@ -135,6 +135,9 @@ PFPC_conn_param = {"model":  'stdp_synapse_sinexp',
                     "delay":  1.0}
 vt_num = 0
 PC_vt_dict = {}
+source_ids = []
+PC_ids= []
+nos_ids = []
 for i, PCi in enumerate(PC):
     nest.Connect(GR, [PCi],
                         {'rule': 'fixed_indegree',
@@ -146,8 +149,16 @@ for i, PCi in enumerate(PC):
         nest.SetStatus([C[n]], {'vt_num': float(vt_num)})
         if not NO_dependency:
             nest.SetStatus([C[n]], {'meta_l': float(1.)}) #********************DA COMMENTARE PER VEDERE EFFETTO META_L
+        source_ids.append(C[n][0])
+        PC_ids.append(C[n][1])
+        nos_ids.append(int(vt_num)) 
         vt_num +=1
     PC_vt_dict[PCi]=np.array(nest.GetStatus(C, {'vt_num'}),dtype=int).T[0]
+    #-----cf-PC connection------
+    vt_tmp = [ vt[n] for n in PC_vt_dict[PCi]]
+    nest.Connect([IO[i]], vt_tmp, {'rule':'all_to_all'},
+                            {"model": "static_synapse",
+                            "weight": 1.0, "delay": 1.0})
 pfs = nest.GetConnections(GR,PC)
 
 init_weight = [[] for i in range(len(PC))]
@@ -167,12 +178,7 @@ for P in range(PC_num):
                         'one_to_one', PCDCN_conn_param)
     if P % 2 == 1:
         count_DCN += 1
-#-----cf-PC connection------
-for i,PCi in enumerate(PC):
-    vt_tmp = [ vt[n] for n in PC_vt_dict[PCi]]
-    nest.Connect([IO[i]], vt_tmp, {'rule':'all_to_all'},
-                            {"model": "static_synapse",
-                            "weight": 1.0, "delay": 1.0})
+
 #-----mf-DCN connection-----
 MFDCN_conn_param = {"model":  "static_synapse","weight": Init_MFDCN,"delay":  10.0}
 for n in range(num_subpop):    
@@ -202,12 +208,12 @@ stop_US = net_config['protocol']['stop_US']
 sim_time_steps = np.arange(0,total_sim_len,dt) #[ms] 
 #%%-------------------------------------------DEFINE GEOMETRY--------------------
 '''Define geometry'''
-source_ids = [pfs[i][0] for i in range(len(pfs))]
-PC_ids = [pfs[i][1] for i in range(len(pfs))]
-nos_ids = [pfs[i][4] for i in range(len(pfs))]
-ev_point_ids = [pfs[i][4] for i in range(len(pfs))]
-cluster_ev_point_ids = [pfs[i][1] for i in range(len(pfs))]
-cluster_nos_ids = [pfs[i][1] for i in range(len(pfs))]
+# source_ids = [pfs[i][0] for i in range(len(pfs))]
+# PC_ids = [pfs[i][1] for i in range(len(pfs))]
+# nos_ids = [pfs[i][4] for i in range(len(pfs))]
+ev_point_ids = nos_ids#[pfs[i][4] for i in range(len(pfs))]
+cluster_ev_point_ids = PC_ids#[pfs[i][1] for i in range(len(pfs))]
+cluster_nos_ids = PC_ids#[pfs[i][1] for i in range(len(pfs))]
 
 # def geometry constants
 y_ml = net_config['geometry']['y_ml'] # height of molecular layer

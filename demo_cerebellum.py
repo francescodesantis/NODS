@@ -8,7 +8,6 @@ import sys
 import random
 import dill
 import time
-
 with open('./demo_cerebellum.json', "r") as json_file:
     net_config = json.load(json_file)
 folder = "./demo_cerebellum_data/"
@@ -17,20 +16,36 @@ network_geom_file = folder+'geom_'+hdf5_file
 network_connectivity_file = folder+'conn_'+hdf5_file
 neuronal_populations = dill.load(open(network_geom_file, "rb"))
 connectivity = dill.load(open(network_connectivity_file, "rb"))
-
 #**************NEST********************
 import nest
-
-
 nest.Install("cerebmodule")
 RESOLUTION = 1.
-CORES=24
-VIRTUAL_CORES = 24
+CORES=1
 nest.ResetKernel()
-nest.SetKernelStatus({"overwrite_files": True,"resolution": RESOLUTION})
+nest.SetKernelStatus({"overwrite_files": True,"resolution": RESOLUTION,'local_num_threads': CORES, 'total_num_virtual_procs': CORES})
 nest.set_verbosity("M_ERROR")  # reduce plotted info
+#**************NODS********************
+sys.path.insert(1, './nods/')
+from core import NODS
+from utils import *
+from plot import plot_cell_activity
+params_filename = 'model_parameters.json'
+root_path = './nods/'
+with open(os.path.join(root_path,params_filename), "r") as read_file_param:
+    params = json.load(read_file_param)
+#**************PLOTS********************
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+import plotly.graph_objects as go
+import seaborn as sns
+with open('demo_cerebellum.json', "r") as read_file:
+    net_config = json.load(read_file)
+pc_color  = net_config['cell_types']['purkinje_cell']['color'][0]
+grc_color  = net_config['cell_types']['granule_cell']['color'][0]
+nos_color  = "#82B366"
 #%%**************NO DEPENDENCY**************
 NO_dependency = False
+
 #%%-------------------------------------------CREATE NETWORK---------------------
 cell_types = list(net_config['cell_types'].keys())
 for cell_name in cell_types:
@@ -56,21 +71,34 @@ for conn_model in connection_models:
         data_pre=connectivity[conn_model]['id_pre']
         data_post=connectivity[conn_model]['id_post']
 
+        # t0 = time.time()
+        # num_syn=len(data_pre)
+        # vt = nest.Create("volume_transmitter_alberto", int(num_syn))
+        # for n, vti in enumerate(vt):
+        #     nest.SetStatus([vti], {"vt_num": n})
+        # t = time.time() - t0
+        # print('volume transmitter created in: ', t, ' sec')
+
         t0 = time.time()
         num_syn=len(data_pre)
-        vt = nest.Create("volume_transmitter_alberto", int(num_syn))
+        vt = nest.Create("volume_transmitter_alberto", int(net_config['cell_types'][post]['numerosity']))
+        
         for n, vti in enumerate(vt):
             nest.SetStatus([vti], {"vt_num": n})
+            cf_PC = nest.GetConnections(neuronal_populations['io_cell']['cell_ids'], [neuronal_populations['purkinje_cell']['cell_ids'][n]])
+            nest.Connect([cf_PC[0][0]], [vti], {'rule':'all_to_all'},
+                        {"model": "static_synapse",
+                        "weight": 1.0, "delay": 1.0})
         t = time.time() - t0
         print('volume transmitter created in: ', t, ' sec')
-        '''
+
         recdict2 = {"to_memory": False,
                     "to_file":    True,
                     "label":     "pf-PC_",
                     "senders":    neuronal_populations['granule_cell']['cell_ids'],
                     "targets":    neuronal_populations['purkinje_cell']['cell_ids']}
         WeightPFPC = nest.Create('weight_recorder', params=recdict2)
-        # '''
+
 
         print('Set connectivity parameters')
         nest.SetDefaults(net_config['connection_models'][conn_model]['synapse_model'],
@@ -87,38 +115,36 @@ for conn_model in connection_models:
                     "receptor_type": net_config['cell_types']['purkinje_cell']['receptors']['granule_cell']
                     }                    
         nest.Connect(data_pre+neuronal_populations['granule_cell']['cell_ids'][0], data_post+neuronal_populations['purkinje_cell']['cell_ids'][0], {"rule": "one_to_one"}, syn_param)       
-        
-        print('Get pf-PC synapses')
-        t0 = time.time()
-        pfs = nest.GetConnections(neuronal_populations['granule_cell']['cell_ids'], neuronal_populations['purkinje_cell']['cell_ids'])
-        t = (time.time() - t0)/60
-        print('connection matrix extracted in: ', t, ' min')
+        '''      
+        vt_num = 0
         PC_vt_dict = {}
-        for PCi in neuronal_populations['purkinje_cell']['cell_ids']:
-            PC_vt_dict[PCi] = []
+        source_ids = []
+        PC_ids= []
+        nos_ids = []
+        t0 = time.time()
+        
+        for i, PCi in enumerate(neuronal_populations['purkinje_cell']['cell_ids']):
+            print(i) 
+            C = nest.GetConnections(neuronal_populations['granule_cell']['cell_ids'], [PCi])
+            for n in range(len(C)):
+                nest.SetStatus([C[n]], {'vt_num': float(vt_num)})
+                if not NO_dependency:
+                    nest.SetStatus([C[n]], {'meta_l': float(1.)}) 
+                source_ids.append(C[n][0])
+                PC_ids.append(C[n][1])
+                nos_ids.append(int(vt_num)) 
+                vt_num +=1
+            PC_vt_dict[PCi]=np.array(nest.GetStatus(C, {'vt_num'}),dtype=int).T[0]
+            #-----cf-PC connection------
+            vt_tmp = [ vt[n] for n in PC_vt_dict[PCi]]
+            cf_PC = nest.GetConnections(neuronal_populations['io_cell']['cell_ids'], [PCi])
             
-        t0 = time.time()
-        vt_num=0
-        for n in range(len(pfs)):
-            nest.SetStatus([pfs[n]], {'vt_num': float(vt_num)})
-            vt_tmp = PC_vt_dict[pfs[n][1]]
-            PC_vt_dict[pfs[n][1]] = np.append(vt_tmp,vt_num)
-            vt_num += 1
-            vt_num = int(vt_num)
-        print('volume transmitter initialized in: ', t, ' min')
-
-        print("Connecting io_cell to purkinje_cell (io_to_purkinje)")
-        t0 = time.time()
-        cf_PC = nest.GetConnections(neuronal_populations['io_cell']['cell_ids'], neuronal_populations['purkinje_cell']['cell_ids'])
-        for i,syn in enumerate(cf_PC):
-            vt_tmp = [ vt[n] for n in PC_vt_dict[cf_PC[i][1]]]
-            nest.Connect([cf_PC[i][0]], vt_tmp, {'rule':'all_to_all'},
+            nest.Connect([cf_PC[0][0]], vt_tmp, {'rule':'all_to_all'},
                                     {"model": "static_synapse",
                                     "weight": 1.0, "delay": 1.0})
-        t = time.time() - t0
-        print('done in: ', t, ' sec')
+        t = (time.time() - t0)/60
+        print('volume transmitter initialized in: ', t, ' min')
         #'''
-    
     else:
         if post == 'glomerulus':
             syn_param = {"model": "static_synapse", 
@@ -200,13 +226,13 @@ fig.add_trace(go.Scatter3d(x=xpos, y=ypos, z=zpos, mode='markers', marker=dict(s
 #'''
 #%%-------------------------------------------DEFINE CS STIMULI---------------------
 print('CS stimulus')
-burst_dur = net_config['devices']['CS']['parameters']["burst_dur"]
-start_first = float(net_config['devices']['CS']['parameters']["start_first"])
-f_rate = net_config['devices']['CS']['parameters']["rate"]
-n_spikes = int(net_config['devices']['CS']['parameters']["rate"] * burst_dur / 1000)
+CS_burst_dur = net_config['devices']['CS']['parameters']["burst_dur"]
+CS_start_first = float(net_config['devices']['CS']['parameters']["start_first"])
+CS_f_rate = net_config['devices']['CS']['parameters']["rate"]
+CS_n_spikes = int(net_config['devices']['CS']['parameters']["rate"] * CS_burst_dur / 1000)
 between_start = net_config['devices']['CS']['parameters']["between_start"]
 n_trials = net_config['devices']['CS']['parameters']["n_trials"]
-isi = int(burst_dur/n_spikes)
+CS_isi = int(CS_burst_dur/CS_n_spikes)
 
 CS_matrix_start_pre = np.round((np.linspace(100.0, 228.0, 11)))
 CS_matrix_start_post = np.round((np.linspace(240.0, 368.0, 11)))
@@ -226,12 +252,12 @@ nest.Connect(CS_device,id_map_glom, 'all_to_all')
 
 #%%-------------------------------------------DEFINE US STIMULUS --------------------
 print('US stimulus')
-burst_dur = net_config['devices']['US']['parameters']["burst_dur"]
-start_first = net_config['devices']['US']['parameters']["start_first"]
-isi = 1000 / net_config['devices']['US']['parameters']["rate"]
+US_burst_dur = net_config['devices']['US']['parameters']["burst_dur"]
+US_start_first = net_config['devices']['US']['parameters']["start_first"]
+US_isi = 1000 / net_config['devices']['US']['parameters']["rate"]
 between_start = net_config['devices']['US']['parameters']["between_start"]
 n_trials = net_config['devices']['US']['parameters']["n_trials"]
-US_matrix = np.concatenate([np.arange(start_first, start_first + burst_dur + isi, isi)
+US_matrix = np.concatenate([np.arange(US_start_first, US_start_first + US_burst_dur + US_isi, US_isi)
                             + between_start * t
                             for t in range(n_trials)])
 US_device = nest.Create(net_config['devices']['US']['device'], params={"spike_times": US_matrix})
@@ -270,3 +296,48 @@ for trial in range(n_trials+1):
     t = time.time() - t0
     print('Time: ', t)
 
+#%%-------------------------------------------PLOT PC SDF MEAN OVER TRIALS-------
+'''Plot PC sdf mean'''
+palette = list(reversed(sns.color_palette("viridis", n_trials).as_hex()))
+sm = plt.cm.ScalarMappable(cmap="viridis_r", norm=plt.Normalize(vmin=0, vmax=n_trials))
+cell = 'pc_spikes'
+step = 50
+sdf_mean_cell = []
+sdf_maf_cell = []
+for trial in range(n_trials):
+    start = trial*between_start
+    stop = CS_start_first+CS_burst_dur+trial*between_start
+    spk = get_spike_activity(cell)
+    sdf_cell = sdf(start=start, stop=stop, spk=spk, step=step)
+    sdf_mean_cell.append(sdf_mean(sdf_cell))
+    sdf_maf_cell.append(sdf_maf(sdf_cell))
+
+fig = plt.figure()
+for trial in range(n_trials):
+    plt.plot(sdf_mean_cell[trial], palette[trial])
+plt.title(cell)
+plt.xlabel("Time [ms]")
+plt.ylabel("SDF [Hz]")
+plt.axvline(CS_start_first, label = "CS start", c = "grey")
+plt.axvline(US_start_first-between_start, label = "US start", c = "black")
+plt.axvline(CS_start_first+CS_burst_dur, label = "CS & US end ", c = "red")
+
+#plt.xticks(np.arange(0,351,50), np.arange(50,401,50))
+plt.legend()
+plt.colorbar(sm, label="Trial")
+plt.show()
+
+#%%-------------------------------------------PLOT NETWORK ACTIVITY--------------TODO improve plots 
+#'''
+devices = list(net_config['devices'].keys())
+for device_name in devices:
+    if 'record' in device_name:
+        cell_name = net_config['devices'][device_name]['cell_types']
+        file = net_config['devices'][device_name]['parameters']['label']
+        try:
+            plot_cell_activity(trial_len=between_start, n_trial=1, delta_t=2,cell_number=net_config['cell_types'][cell_name]['numerosity'], cell_name=file, freq_plot = True, png = False, scatter = True, png_scatter = False, dir='')
+            plt.show()
+        except:
+            pass
+
+# %%
