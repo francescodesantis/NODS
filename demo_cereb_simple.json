@@ -1,0 +1,533 @@
+{
+    "cell_types": {
+        "mossy_fibers": {
+            "display_name": "Mossy fibers",
+            "color": ["#6C8EBF","#DAE8FC"],
+            "spatial": {
+                "radius": 1.5,
+                "density": 0.0003
+            },
+            "numerosity": 16,
+            "neuron_model": "parrot_neuron",
+            "parameters": {
+            }
+        },
+        "granule_cell": {
+            "display_name": "Granule cell",
+            "color": [
+                "#D6B656",
+                "#FFF2CC"
+            ],
+            "spatial": {
+                "radius": 2.5,
+                "density": 0.0039,
+                "geometry": {
+                    "pf_height": 126,
+                    "pf_height_sd": 15
+                }
+            },
+            "numerosity": 2862,
+            "neuron_model": "iaf_cond_alpha",
+            "parameters": {
+                "t_ref": 1.5,
+                "C_m": 7.0,
+                "V_th": -41.0,
+                "V_reset": -70.0,
+                "E_L": -62.0,
+                "I_e": 0.0,
+                "tau_syn_ex": 1.9,
+                "tau_syn_in": 4.5,
+                "g_L": 0.29
+            }
+        },
+        "golgi_cell": {
+            "display_name": "Golgi cell",
+            "color": [
+                "#975199",
+                "E6D0DE"
+            ],
+            "spatial": {
+                "radius": 8.0,
+                "density": 9e-06,
+                "geometry": {
+                    "axon_radius": 160
+                }
+            },
+            "numerosity": 7,
+            "neuron_model": "iaf_cond_alpha",
+            "parameters": {
+                "t_ref": 2.0,
+                "C_m": 145.0,
+                "V_th": -55.0,
+                "V_reset": -75.0,
+                "E_L": -62.0,            
+                "I_e": 36.75,
+                "tau_syn_ex": 0.23,
+                "tau_syn_in": 3.3,
+                "g_L": 3.3
+            }
+        },
+        "purkinje_cell": {
+            "display_name": "Purkinje cell",
+            "color": [
+                "#9673A6",
+                "E1D5E7"
+            ],
+            "spatial": {
+                "radius": 7.5,
+                "planar_density": 0.0017
+            },
+            "numerosity": 10,
+            "neuron_model": "iaf_cond_alpha",
+            "parameters": {
+                "t_ref": 0.5,
+                "C_m": 334.0,
+                "V_th": -43.0,
+                "V_reset": -69.0,
+                "E_L": -59.0,            
+                "I_e": 800.0,
+                "tau_syn_ex": 1.1,
+                "tau_syn_in": 2.8,
+                "g_L": 7.1
+            }
+        },
+        "basket_cell": {
+            "display_name": "Basket Cell",
+            "color": [
+                "#D79B00",
+                "FFE6CC"
+            ],
+            "spatial": {
+                "radius": 6.0,
+                "density": 5e-05
+            },
+            "numerosity": 45,
+            "neuron_model": "iaf_cond_alpha",
+            "parameters": {
+                "t_ref": 1.59,
+                "C_m": 14.6,
+                "V_th": -53.0,
+                "V_reset": -78.0,
+                "E_L": -68.0,            
+                "I_e": 24.05,
+                "tau_syn_ex": 0.64,
+                "tau_syn_in": 2.0,
+                "g_L": 1.6
+            }
+        },
+        "stellate_cell": {
+            "display_name": "Stellate Cell",
+            "color": [
+                "#D79B00",
+                "FFE6CC"
+            ],
+            "spatial": {
+                "radius": 6.0,
+                "density": 5e-05
+            },
+            "numerosity": 45,
+            "neuron_model": "iaf_cond_alpha",
+            "parameters": {
+                "t_ref": 1.59,
+                "C_m": 14.6,
+                "V_th": -53.0,
+                "V_reset": -78.0,
+                "E_L": -68.0,            
+                "I_e": 24.05,
+                "tau_syn_ex": 0.64,
+                "tau_syn_in": 2.0,
+                "g_L": 1.6
+            }
+        },
+        "io_cell": {
+            "display_name": "Inferior olive",
+            "color": [
+                "#B85450",
+                "#DAE8FC"
+            ],
+            "numerosity": 1,
+            "neuron_model": "iaf_cond_alpha",
+            "parameters": {
+                "t_ref": 1.0,
+                "C_m": 189.0,
+                "V_th": -35.0,
+                "V_reset": -45.0,
+                "E_L": -45.0,
+                "I_e": 0.0,
+                "tau_syn_ex": 1.0,
+                "tau_syn_in": 60.0,
+                "g_L": 17.18
+            }
+        }
+    },
+    "connection_models": {
+        "mossy_to_granule": {
+            "pre": "mossy_fibers",
+            "post": "granule_cell",
+            "conn_spec":{
+                "rule": "fixed_indegree", 
+                "indegree": 4
+            },
+            "syn_spec": {
+                "model": "static_synapse",
+                "weight": 0.15,
+                "delay": 4.0
+            }
+        },
+        "golgi_to_granule": {
+            "pre": "golgi_cell",
+            "post": "granule_cell",
+            "conn_spec":{
+                "rule": "fixed_indegree", 
+                "indegree": 2
+            },
+            "syn_spec": {
+                "model": "static_synapse",
+                "weight":0.6,
+                "delay": 2.0
+            }
+        },
+        "mossy_to_golgi": {
+            "pre": "mossy_fibers",
+            "post": "golgi_cell",
+            "conn_spec":{
+                "rule": "fixed_outdegree", 
+                "outdegree": 2
+            },
+            "syn_spec": {
+                "model": "static_synapse",
+                "weight": 1.5,
+                "delay": 4.0
+            }
+        },
+        "golgi_to_golgi": {
+            "pre": "golgi_cell",
+            "post": "golgi_cell",
+            "conn_spec":{
+                "rule": "fixed_indegree", 
+                "indegree": 16
+            },
+            "syn_spec": {
+                "model": "static_synapse",
+                "weight": -0.3,
+                "delay": 1.0
+            }
+        },
+        "parallel_fiber_to_golgi": {
+            "pre": "granule_cell",
+            "post": "golgi_cell",
+            "conn_spec":{
+                "rule": "fixed_indegree", 
+                "indegree": 910
+            },
+            "syn_spec": {
+                "model": "static_synapse",
+                "weight": 0.05,
+                "delay": 5.0
+            }
+        },
+        "parallel_fiber_to_basket": {
+            "pre": "granule_cell",
+            "post": "basket_cell",
+            "conn_spec":{
+                "rule": "fixed_indegree", 
+                "indegree": 740
+            },
+            "syn_spec": {
+                "model": "static_synapse",
+                "weight": 0.015,
+                "delay": 5.0
+            }
+        },
+        "parallel_fiber_to_stellate": {
+            "pre": "granule_cell",
+            "post": "stellate_cell",
+            "conn_spec":{
+                "rule": "fixed_indegree", 
+                "indegree": 480
+            },
+            "syn_spec": {
+                "model": "static_synapse",
+                "weight": 0.015,
+                "delay": 5.0
+            }
+        },
+        "stellate_to_purkinje": {
+            "pre": "stellate_cell",
+            "post": "purkinje_cell",
+            "conn_spec":{
+                "rule": "fixed_indegree", 
+                "indegree": 5
+            },
+            "syn_spec": {
+                "model": "static_synapse",
+                "weight": -0.3,
+                "delay": 5.0
+            }
+        },
+        "basket_to_purkinje": {
+            "pre": "basket_cell",
+            "post": "purkinje_cell",
+            "conn_spec":{
+                "rule": "fixed_indegree", 
+                "indegree": 20
+            },
+            "syn_spec": {
+                "model": "static_synapse",
+                "weight": -0.3,
+                "delay": 4.0
+            }
+        },
+        "stellate_to_stellate": {
+            "pre": "stellate_cell",
+            "post": "stellate_cell",
+            "conn_spec":{
+                "rule": "fixed_indegree", 
+                "indegree": 14
+            },
+            "syn_spec": {
+                "model": "static_synapse",
+                "weight": -0.2,
+                "delay": 1.0
+            }
+        },
+        "basket_to_basket": {
+            "pre": "basket_cell",
+            "post": "basket_cell",
+            "conn_spec":{
+                "rule": "fixed_indegree", 
+                "indegree": 14
+            },
+            "syn_spec": {
+                "model": "static_synapse",
+                "weight": -0.2,
+                "delay": 1.0
+            }
+        },
+        "io_to_purkinje": {
+            "pre": "io_cell",
+            "post": "purkinje_cell",
+            "conn_spec":{
+                "rule": "fixed_indegree", 
+                "indegree": 1
+            },
+            "syn_spec": {
+                "model": "static_synapse",
+                "weight": 40.0,
+                "delay": 4.0
+            }
+        },
+        "io_to_basket": {
+            "pre": "io_cell",
+            "post": "basket_cell",
+            "conn_spec":{
+                "rule": "fixed_indegree", 
+                "indegree": 1
+            },
+            "syn_spec": {
+                "model": "static_synapse",
+                "weight": 1.0,
+                "delay": {"distribution": "normal_clipped", "low": 40.0, "mu": 70.0,
+                "sigma": 10.0}
+            }
+        },
+        "io_to_stellate": {
+            "pre": "io_cell",
+            "post": "stellate_cell",
+            "conn_spec":{
+                "rule": "fixed_indegree", 
+                "indegree": 1
+            },
+            "syn_spec": {
+                "model": "static_synapse",
+                "weight": 1.0,
+                "delay": {"distribution": "normal_clipped", "low": 40.0, "mu": 70.0,
+                "sigma": 10.0}
+            }
+        },
+        "parallel_fiber_to_purkinje": {
+            "pre": "granule_cell",
+            "post": "purkinje_cell",
+            "syn_spec": {
+                "model": "stdp_synapse_sinexp",
+                "weight": 0.02,
+                "delay": 5.0
+            },
+            "ratio": 0.55,
+            "parameters": {
+                "A_minus": -0.02,
+                "A_plus": 0.002,
+                "Wmin": 0.0,
+                "Wmax": 4.0
+            }
+        }
+    },
+    "devices": {
+        "background_noise": {
+            "device": "poisson_generator",
+            "io": "input",
+            "targetting": "cell_type",
+            "cell_types": [
+                "mossy_fibers"
+            ],
+            "parameters": {
+                "rate": 0.0,
+                "start": 0.0,
+                "stop": 50500.0
+            }
+        },
+        "CS": {
+            "device": "spike_generator",
+            "io": "input",
+            "radius": 20,
+            "x":75,
+            "z":100,
+            "parameters": {
+                "purpose": "CS",
+                "start_first": 100,
+                "burst_dur": 280,
+                "rate": 40,
+                "between_start": 500,
+                "n_trials": 101
+            },
+            "connection": {
+                "rule": "one_to_one"
+            }
+        },
+        "US": {
+            "device": "spike_generator",
+            "io": "input",
+            "targetting": "cell_type",
+            "cell_types": [
+                "io_cell"
+            ],
+            "parameters": {
+                "purpose": "US",
+                "start_first": 850,
+                "burst_dur": 30,
+                "rate": 500,
+                "between_start": 500,
+                "n_trials": 100
+            },
+            "conn_spec": {
+                "rule": "all_to_all"
+            },
+            "syn_spec": {
+                "model": "static_synapse",
+                "weight": 10.0,
+                "delay": 1.0
+            }
+        },
+        "record_mossy_fibers_spikes": {
+            "device": "spike_detector",
+            "io": "output",
+            "targetting": "cell_type",
+            "cell_types": "mossy_fibers",
+            "parameters": {
+                "withgid": true,
+                "withtime": true,
+                "to_file": true,
+                "label": "glom_spikes"
+            }
+        },
+        "record_pc_spikes": {
+            "device": "spike_detector",
+            "io": "output",
+            "targetting": "cell_type",
+            "cell_types": "purkinje_cell",
+            "parameters": {
+                "withgid": true,
+                "withtime": true,
+                "to_file": true,
+                "label": "pc_spikes"
+            }
+        },
+        "record_io_spikes": {
+            "device": "spike_detector",
+            "io": "output",
+            "targetting": "cell_type",
+            "cell_types": "io_cell",
+            "parameters": {
+                "withgid": true,
+                "withtime": true,
+                "to_file": true,
+                "label": "io_spikes"
+            }
+        },
+        "record_golgi_spikes": {
+            "device": "spike_detector",
+            "io": "output",
+            "targetting": "cell_type",
+            "cell_types": "golgi_cell",
+            "parameters": {
+                "withgid": true,
+                "withtime": true,
+                "to_file": true,
+                "label": "golgi_spikes"
+            }
+        },
+        "record_basket_spikes": {
+            "device": "spike_detector",
+            "io": "output",
+            "targetting": "cell_type",
+            "cell_types": "basket_cell",
+            "parameters": {
+                "withgid": true,
+                "withtime": true,
+                "to_file": true,
+                "label": "basket_spikes"
+            }
+        },
+        "record_stellate_spikes": {
+            "device": "spike_detector",
+            "io": "output",
+            "targetting": "cell_type",
+            "cell_types": "stellate_cell",
+            "parameters": {
+                "withgid": true,
+                "withtime": true,
+                "to_file": true,
+                "label": "stellate_spikes"
+            }
+        },
+        "record_grc_spikes": {
+            "device": "spike_detector",
+            "io": "output",
+            "targetting": "cell_type",
+            "cell_types": "granule_cell",
+            "parameters": {
+                "withgid": true,
+                "withtime": true,
+                "to_file": true,
+                "label": "granule_spikes"
+            }
+        },
+        "nNOS": {
+            "display_name": "nNOS",
+            "color": [
+                "#82B366",
+                "#D5E8D4"
+            ],
+            "spatial": {
+                "radius": 0.1,
+                "planar_density": 0.05
+            },
+            "numerosity": 164609
+        }
+    },
+    "colors": {
+        "CS": "#DAE8FC",
+        "US": "#F8CECC",
+        "CR": "#000000",
+        "calcium": "#D80073",
+        "spikes": "#FFFF88",
+        "probes": "#6A00FF"
+    },
+    "geometry":{
+        "y_ml":150,
+        "y_gl":130,
+        "nos_density": 0.05,
+        "PC_dist": 15,        
+        "num_subpop": 4
+    }
+}
