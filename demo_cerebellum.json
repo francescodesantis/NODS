@@ -1,5 +1,9 @@
 {
     "cell_types": {
+        "mossy_fibers": {
+            "display_name": "Mossy fibers",
+            "neuron_model": "parrot_neuron"
+        },
         "glomerulus": {
             "display_name": "Glomerulus",
             "color": [
@@ -10,11 +14,11 @@
                 "radius": 1.5,
                 "density": 0.0003
             },
-            "numerosity": 2896,
             "neuron_model": "parrot_neuron"
         },
         "granule_cell": {
             "display_name": "Granule cell",
+            "neuron_model": "eglif_cond_alpha_multisyn",
             "color": [
                 "#D6B656",
                 "#FFF2CC"
@@ -27,7 +31,6 @@
                     "pf_height_sd": 15
                 }
             },
-            "numerosity": 37678,
             "parameters": {
                 "t_ref": 1.5,
                 "C_m": 7.0,
@@ -53,11 +56,13 @@
             },
             "receptors": {
                 "glomerulus": 1,
+                "dcn_cell_glut_large": 1,
                 "golgi_cell": 2
             }
         },
         "golgi_cell": {
             "display_name": "Golgi cell",
+            "neuron_model": "eglif_cond_alpha_multisyn",
             "color": [
                 "#975199",
                 "E6D0DE"
@@ -69,7 +74,6 @@
                     "axon_radius": 160
                 }
             },
-            "numerosity": 89,
             "parameters": {
                 "t_ref": 2.0,
                 "C_m": 145.0,
@@ -87,21 +91,26 @@
                 "k2": 0.023,
                 "A1": 259.988,
                 "A2": 178.01,
-                "tau_syn1": 0.23,
-                "tau_syn2": 3.3,
-                "tau_syn3": 0.5,
+                "tau_syn1": 5.0,
+                "tau_syn2": 5.0,
+                "tau_syn3": 1.25,
+                "tau_syn4": 2.4,
                 "E_rev1": 0.0,
                 "E_rev2": -80.0,
-                "E_rev3": 0.0
+                "E_rev3": 0.0,
+                "E_rev4": -80.0
             },
             "receptors": {
                 "glomerulus": 1,
+                "dcn_cell_glut_large": 1,
                 "golgi_cell": 2,
+                "dcn_cell_Gly-I": 4,
                 "granule_cell": 3
             }
         },
         "purkinje_cell": {
             "display_name": "Purkinje cell",
+            "neuron_model": "eglif_cond_alpha_multisyn",
             "color": [
                 "#9673A6",
                 "E1D5E7"
@@ -110,7 +119,6 @@
                 "radius": 7.5,
                 "planar_density": 0.0017
             },
-            "numerosity": 48,
             "parameters": {
                 "t_ref": 0.5,
                 "C_m": 334.0,
@@ -122,7 +130,7 @@
                 "lambda_0": 4.0,
                 "tau_V": 3.5,
                 "tau_m": 47.0,
-                "I_e": 742.543,
+                "I_e": 176.26,
                 "kadap": 1.492,
                 "k1": 0.195,
                 "k2": 0.041,
@@ -144,6 +152,7 @@
         },
         "basket_cell": {
             "display_name": "Basket cell",
+            "neuron_model": "eglif_cond_alpha_multisyn",
             "color": [
                 "#D79B00",
                 "FFE6CC"
@@ -152,7 +161,6 @@
                 "radius": 6.0,
                 "density": 5e-05
             },
-            "numerosity": 297,
             "parameters": {
                 "t_ref": 1.59,
                 "C_m": 14.6,
@@ -184,6 +192,7 @@
         },
         "stellate_cell": {
             "display_name": "Stellate cell",
+            "neuron_model": "eglif_cond_alpha_multisyn",
             "color": [
                 "#D79B00",
                 "FFE6CC"
@@ -192,7 +201,6 @@
                 "radius": 4.0,
                 "density": 5e-05
             },
-            "numerosity": 303,
             "parameters": {
                 "t_ref": 1.59,
                 "C_m": 14.6,
@@ -224,11 +232,11 @@
         },
         "io_cell": {
             "display_name": "Inferior olive",
+            "neuron_model": "eglif_cond_alpha_multisyn",
             "color": [
                 "#B85450",
                 "#DAE8FC"
             ],
-            "numerosity": 6,
             "parameters": {
                 "t_ref": 1.0,
                 "C_m": 189.0,
@@ -256,6 +264,109 @@
             "receptors": {
                 "dcn_GABA": 2
             }
+        },
+        "dcn_cell_glut_large": {
+            "display_name": "DCN Glut",
+            "neuron_model": "eglif_cond_alpha_multisyn",
+            "color": [
+                "#000000",
+                "#000000"
+            ],
+            "parameters": {
+                "t_ref": 1.5,
+                "C_m": 142.0,
+                "V_th": -36.0,
+                "V_reset": -55.0,
+                "E_L": -45.0,
+                "Vinit": -45.0,
+                "lambda_0": 3.5,
+                "tau_V": 3.0,
+                "tau_m": 33.0,
+                "I_e": 75.385,
+                "kadap": 0.408,
+                "k1": 0.697,
+                "k2": 0.047,
+                "A1": 13.857,
+                "A2": 3.477,
+                "tau_syn1": 1.0,
+                "tau_syn2": 0.7,
+                "E_rev1": 0.0,
+                "E_rev2": -80.0,
+                "E_rev3": 0.0
+            },
+            "receptors": {
+                "mossy_fibers": 1,
+                "purkinje_cell": 2,
+                "io_cell": 1
+            }
+        },
+        "dcn_cell_GABA": {
+            "display_name": "DCN GABA",
+            "neuron_model": "eglif_cond_alpha_multisyn",
+            "color": [
+                "#000000",
+                "#000000"
+            ],
+            "parameters": {
+                "t_ref": 3.0,
+                "C_m": 56.0,
+                "V_th": -39.0,
+                "V_reset": -55.0,
+                "E_L": -40.0,
+                "Vinit": -40.0,
+                "lambda_0": 0.9,
+                "tau_V": 1.0,
+                "tau_m": 56.0,
+                "I_e": 2.384,
+                "kadap": 0.079,
+                "k1": 0.041,
+                "k2": 0.044,
+                "A1": 176.358,
+                "A2": 176.358,
+                "tau_syn1": 3.64,
+                "tau_syn2": 1.14,
+                "E_rev1": 0.0,
+                "E_rev2": -80.0,
+                "E_rev3": 0.0
+            },
+            "receptors": {
+                "io_cell": 1,
+                "purkinje_cell": 2
+            }
+        },
+        "dcn_cell_Gly-I": {
+            "display_name": "DCN Gly",
+            "neuron_model": "eglif_cond_alpha_multisyn",
+            "color": [
+                "#000000",
+                "#000000"
+            ],
+            "parameters": {
+                "t_ref": 1.65,
+                "C_m": 104.0,
+                "V_th": -30.0,
+                "V_reset": -50.0,
+                "E_L": -40.0,
+                "Vinit": -40.0,
+                "lambda_0": 1.5,
+                "tau_V": 1.0,
+                "tau_m": 45.76,
+                "I_e": -116.8147,
+                "kadap": 0.9501,
+                "k1": 0.5759,
+                "k2": 0.0469,
+                "A1": 600.0000,
+                "A2": 79.8650,
+                "tau_syn1": 1.0,
+                "tau_syn2": 0.7,
+                "E_rev1": 0.0,
+                "E_rev2": -80.0,
+                "E_rev3": 0.0
+            },
+            "receptors": {
+                "mossy_fibers": 1,
+                "purkinje_cell": 2
+            }
         }
     },
     "connection_models": {
@@ -268,10 +379,10 @@
                 "static_synapse": {}
             }
         },
-        "golgi_to_glomerulus": {
+        "golgi_to_granule": {
             "pre": "golgi_cell",
             "post": "granule_cell",
-            "weight": -0.2414254875363826,
+            "weight": -0.14753779793890048,
             "delay": 2.0,
             "synapse": {
                 "static_synapse": {}
@@ -375,43 +486,6 @@
                 "static_synapse": {}
             }
         },
-        "io_to_purkinje": {
-            "pre": "io_cell",
-            "post": "purkinje_cell",
-            "weight": 300.0,
-            "delay": 4.0,
-            "synapse": {
-                "static_synapse": {}
-            }
-        },
-        "io_to_basket": {
-            "pre": "io_cell",
-            "post": "basket_cell",
-            "weight": 3.0,
-            "delay": {
-                "distribution": "exponential_clipped_to_boundary",
-                "lambda": 80.0,
-                "low": 40.0,
-                "high": 120.0
-            },
-            "synapse": {
-                "static_synapse": {}
-            }
-        },
-        "io_to_stellate": {
-            "pre": "io_cell",
-            "post": "stellate_cell",
-            "weight": 11.0,
-            "delay": {
-                "distribution": "exponential_clipped_to_boundary",
-                "lambda": 80.0,
-                "low": 40.0,
-                "high": 120.0
-            },
-            "synapse": {
-                "static_synapse": {}
-            }
-        },
         "parallel_fiber_to_purkinje": {
             "pre": "granule_cell",
             "post": "purkinje_cell",
@@ -419,13 +493,13 @@
             "hetero": true,
             "teaching": "io_to_purkinje",
             "synapse_model": "stdp_synapse_sinexp",
-            "weight": 0.4,
+            "weight": 0.13589182863258192,
             "delay": 5.0,
             "parameters": {
-                "A_minus": -0.009,
-                "A_plus": 0.000225,
+                "A_minus": -0.1,
+                "A_plus": 0.001,
                 "Wmin": 0.0,
-                "Wmax": 2.0
+                "Wmax": 0.6
             }
         },
         "ascending_axon_to_purkinje": {
@@ -433,6 +507,15 @@
             "post": "purkinje_cell",
             "weight": 0.882012880801472,
             "delay": 2.0,
+            "synapse": {
+                "static_synapse": {}
+            }
+        },
+        "io_to_purkinje": {
+            "pre": "io_cell",
+            "post": "purkinje_cell",
+            "weight": 0.0,
+            "delay": 4.0,
             "synapse": {
                 "static_synapse": {}
             }
@@ -444,7 +527,7 @@
             "io": "input",
             "targetting": "cell_type",
             "cell_types": [
-                "mossy_fibers"
+                "glomerulus"
             ],
             "parameters": {
                 "rate": 0.0,
@@ -455,9 +538,9 @@
         "CS": {
             "device": "spike_generator",
             "io": "input",
-            "radius": 20,
-            "x":75,
-            "z":100,
+            "radius": 30,
+            "x": 150,
+            "z": 100,
             "parameters": {
                 "purpose": "CS",
                 "start_first": 100,
@@ -588,8 +671,7 @@
             "spatial": {
                 "radius": 0.1,
                 "planar_density": 0.05
-            },
-            "numerosity": 164609
+            }
         }
     },
     "colors": {

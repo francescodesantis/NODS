@@ -12,7 +12,7 @@ import dill
 import time
 #**************BSB********************
 from bsb.core import from_storage
-hdf5_file = "cerebellum_NODS_smaller"
+hdf5_file = "300x_200z_claudia_dcn_test_3"
 network = from_storage(hdf5_file+".hdf5")
 
 with open('demo_cerebellum.json', "r") as json_file:
